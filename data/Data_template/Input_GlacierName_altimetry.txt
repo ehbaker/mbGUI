@@ -1,0 +1,9 @@
+Input aser altimetry assessments.See Larsen and others (2015) for glacier specific volume change assessments. These are secondary geodetic comparisons, so could be derived through any means really.
+Final input file must begin at the first line of text in the example below.
+
+Wolverine Glacier Geodetic mass balances expressed as changes in Volume
+UAF Laser Altimetry Program
+year	month	day	dV	uncertainty
+1994	05	27	0	0.5
+1999	05	13	-4.37	0.5
+2001	05	17	-1.26	0.5 

@@ -1,0 +1,13 @@
+Input of Site names and index numbers. Site index number are used by code in deriving precipitation ratios, to either lump sites together (if they have the same number)
+or seperate them apart (if they have different numbers). Final input file must start with row 1 as seen in the example from Wolverine Glacier below.
+
+LA	1
+A	2
+AU	3	
+P	4
+N	5
+B	6
+S	7	
+C	8
+T	9
+Y	10

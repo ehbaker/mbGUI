@@ -1,0 +1,11 @@
+Input geodetic data. These data are only derived from full glacier coverage DEM coregistration and differencing.
+Final input file must begin at the first line of text as seen in the example below.
+
+Wolverine Glacier Geodetic mass balances expressed as changes in volume				
+1979-2002 DEMs from Leif 2008 DEM from MJFahey 2011 DEM from RMMarch				
+year	month	day	dV	uncertainty
+1979	8	3	0.0	2.2
+1995	9	27	-3.9	1.6
+1998	9	24	-5.8	1.8
+2002	8	26	-5.8	1.7
+2008	9	17	-12.8	1.5

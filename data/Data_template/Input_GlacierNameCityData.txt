@@ -1,0 +1,10 @@
+Input file of city data names and desired year to start using that data source. You can use up to two distal weather stations to file data gaps in glacier margin weather station data.
+Row 1 is the oldest (longest) weather station, used if a more ideal station (row 2) does not span the entire glacier record. Row 3 is the year your weather data begins--must be two years longer than your glacier record.
+Row 4 is the year you want the code to start using the more ideal weather station named in row 2. If you are only using one distal weather station, enter 'none' in rows 1 and 3, and the name and start date in rows 2 and 4.
+Final input file must start with row 1 as seen in the example below.
+
+
+Seward
+Seward19N
+1964
+1987

@@ -1,0 +1,8 @@
+Input file of your local weather station information. Row 1 is the altitude of your primary weather station used in code (typically most local). Row 2 is the year this data starts, which must be two years longer than the mass balance date, even if you have no data
+Row 3 is the number of days you allow the degree day model to run before the data of a observation. Row 4 is the number of days you allow the degree dar model to run after an observation.
+Final input file should begin with row 1 as seen in the example from Wolverine Glacier below.
+
+990
+1964
+25
+65
