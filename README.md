@@ -7,3 +7,12 @@
   + `..` means 'go up a directory'; from _c/Users/yourusername_, type `cd Desktop` to go to the desktop.
 + Clone the directory with `git clone https://github.com/ehbaker/mbGUI.git`
 + A new folder will appear titled *mbGUI* - this has all the files in this repository.
+
+This repository is a work in progress, not a final distribution. 
+===
+Please contact the repository owner at ehbaker@usgs.gov before using. It does not function as a stand-alone.
+
+Please contact the repository owners before using, to inquire about state of completeness and procedures for running correcly, including program requirements, data formatting requirements, and state of mass balance code itself.
+
+Legal disclaimer:
+Although this program has been used by the USGS, no warranty, expressed or implied, is made by the USGS or the United States Government as to the accuracy and functioning of the program and related program material nor shall the fact of distribution constitute any such warranty, and no responsibility is assumed by the USGS in connection therewith.
