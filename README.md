@@ -1,4 +1,4 @@
-# How to Get a Local Copy of this Mass Balance GUI:
+# How to Get a Local Copy of this MB Matlab GUI:
 
 + Open Git Bash (if you don't have it yet, [download](https://git-for-windows.github.io/)).
 + Use `cd` and tab-completion to move to the folder where you want to keep your local copy of this GUI.
