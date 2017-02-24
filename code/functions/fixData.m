@@ -24,7 +24,7 @@ ready=0;
 fixCityData(glacier); %correct/reformat data from cities
 
     	myglacier=glacier;  %Selected Glacier
-        mycitydata=importdata(['../data/',glacier,'/Input_',glacier,'CityData.txt']);  %import selected glacier city data
+        mycitydata=importdata(['../data/',glacier,'/Input/Input_',glacier,'CityData.csv']);  %import selected glacier city data
         mycit1=mycitydata.textdata(1); %Longest city data location if second/better location does not cover entire glacier record
         yrBeg=mycitydata.data(1);  %First year of city data
         mycity2=mycitydata.textdata(2);     %Second/best city data location
@@ -32,9 +32,9 @@ fixCityData(glacier); %correct/reformat data from cities
         % the precip and temp data are both in matrix with years as columns
         % and day of hydrologic year as rows (starting with day 275). 
         % first year is hydrological year 1965, so start at 10/1/64
-        dailyprecip=importdata(['../data/',glacier,'/Input_',glacier,'DailyPrecip.txt']); %(366,nyears) non-leap years have one too many days
-        dailytemp=importdata(['../data/',glacier,'/Input_',glacier,'DailyTemp.txt']);
-        missingprecip = load(['../data/',glacier,'/Input_',glacier,'MissingPrecip.txt']); % intervals of missing data plus the total precip in mm recorded at the gage during that interval
+        dailyprecip=importdata(['../data/',glacier,'/Input_',glacier,'DailyPrecip.csv']); %(366,nyears) non-leap years have one too many days
+        dailytemp=importdata(['../data/',glacier,'/Input_',glacier,'DailyTemp.csv']);
+        missingprecip = load(['../data/',glacier,'/Input_',glacier,'MissingPrecip.csv']); % intervals of missing data plus the total precip in mm recorded at the gage during that interval
         % Missing data will be corrected by using the Seward, AK, data till 12/31/86,
         % then the Seward 19 N, AK, data on 1/1/87 and after
         myweather=['../data/',glacier,'/Output_',glacier,'TempPrecipRegressions.txt']; % New regressions stored here
