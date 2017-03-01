@@ -1,6 +1,8 @@
 function varargout = mb_GUI(varargin)
 dbstop if error
 addpath functions/
+%random comment
+
 % MB_GUI M-file for mb_GUI.fig
 %      MB_GUI, by itself, creates a new MB_GUI or raises the existing
 %      singleton*.
