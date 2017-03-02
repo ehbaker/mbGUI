@@ -1,7 +1,7 @@
 function [] = formatSecondaryWxData(glacier)
 % this function converts units and replaces no data values with nans
 
-SecondaryData=importdata(['../data/',glacier,'/Input/Input_',glacier,'_SecondaryWxData.csv']);  %import selected glacier Secondary data
+SecondaryData=importdata(['data/',glacier,'/Input/Input_',glacier,'_SecondaryWxData.csv']);  %import selected glacier Secondary data
         
 for j = 1:2;
     name = SecondaryData(j);
