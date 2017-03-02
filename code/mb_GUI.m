@@ -1,8 +1,8 @@
 function varargout = mb_GUI(varargin)
 dbstop if error
-addpath functions/
-%random comment
+ 
 
+addpath functions/
 % MB_GUI M-file for mb_GUI.fig
 %      MB_GUI, by itself, creates a new MB_GUI or raises the existing
 %      singleton*.
@@ -69,14 +69,14 @@ handles.output = hObject;
 %    Gulkana by default %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 axes(handles.Site_Map);
-    glacier_map=['../data/Gulkana/Input/Input_Gulkana_Glaciological_Sites.jpg']; 
+    glacier_map=['data/Gulkana/Input/Input_Gulkana_Glaciological_Sites.jpg']; 
     locafig = imread(glacier_map);
         image(locafig);
         axis off          % Remove axis ticks and numbers
         axis image 
         
         glacier = 'Gulkana';
-        mydata = ['../data/',glacier,'/Input/Input_',glacier,'_Glaciological_Data.csv'];
+        mydata = ['data/',glacier,'/Input/Input_',glacier,'_Glaciological_Data.csv'];
         data=importdata(mydata);
         all_years=cell2mat(data.textdata(2:end,1));
         unique_years=unique(str2num(all_years));
@@ -124,7 +124,7 @@ function GLACIER_ID_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 glacier = get(handles.Call_Glacier,'String');
-mydata = ['../data/',glacier,'/Input/Input_',glacier,'_Glaciological_Data.csv'];
+mydata = ['data/',glacier,'/Input/Input_',glacier,'_Glaciological_Data.csv'];
         data=importdata(mydata);
         all_years=cell2mat(data.textdata(2:end,1));
         unique_years=unique(str2num(all_years));
@@ -152,7 +152,7 @@ use=zeros(14,1);%return all names
     set(handles.SITE14,'string',mysit(14,:));
     
     axes(handles.Site_Map);
-    glacier_map=['../data/',glacier,'/Input/Input_',glacier,'_Glaciological_Sites.jpg']; 
+    glacier_map=['data/',glacier,'/Input/Input_',glacier,'_Glaciological_Sites.jpg']; 
     locafig = imread(glacier_map);
         image(locafig);
         axis off          % Remove axis ticks and numbers
@@ -251,6 +251,8 @@ end
 
 function UPDATE_BUTTON_Callback(hObject, eventdata, handles)
 % Get user input from GUI
+clear all
+close all
 mydir = pwd;                                            %gets present working directory
 glacier = str2mat(get(handles.Call_Glacier,'String'))   %get glacier entered
  grad = get(handles.GRAD_POPUP,'Value');                %get gradients you are using
@@ -258,7 +260,7 @@ glacier = str2mat(get(handles.Call_Glacier,'String'))   %get glacier entered
 %
 
     
-locaS=['../data/',glacier,'/Input/Input_',glacier,'_Glaciological_Sites.jpg']; 
+locaS=['data/',glacier,'/Input/Input_',glacier,'_Glaciological_Sites.jpg']; 
    
 
 %
@@ -268,7 +270,7 @@ addpath functions
 %
 switch get(handles.UPDATE_POPUP,'Value') 
     case 1 %correct temp and precip data
-        ready=fillWxData(glacier);
+        ready=fixData(glacier);
         if ready==1
             set(handles.UPDATE_BUTTON,'string','Can now invert for params');
         else
@@ -411,6 +413,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if get(handles.PLOTINTERATION,'Value')==1
+%     close all
    if length(my_yr)>1 %warn user plotting integrations for every year might take a while
        promptMessage = sprintf('You selected to plot integrations for more than one year. This might take a while. Do you still want to plot integrations?');
         titleBarCaption = 'Plotting Integrations';
@@ -431,6 +434,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if get(handles.PLOTABLATIONMODEL,'Value')==1
+       % close all
        if length(my_yr)>1 %warn user plotting integrations for every year might take a while
        promptMessage = sprintf('You selected to plot the ablation model for more than one year. This probably blow up your machine. Do you still want to?');
         titleBarCaption = 'Plotting ablation model';
@@ -485,10 +489,7 @@ for i=1:length(surf)
 
 %want glacier wide minimum, so callGlac=1    
 % want to use bal grad fit to fill missing values (miss=1)
-% callGlac=bal;
-% miss=1;
 [b_weqW,b_weqS,b_weqG, b_weqGW,b_weq,b_barW,b_barS,b_bar,ELA,zone_weights,dateAMin,dateAMax,meltrateS,meltrateI,Zs,winter_gradients,summer_gradients,annual_gradients]=calcBalance(glacier,balance_sites,my_yr,bal,surf(i),grad,plot_integration,plot_ablation_model);
-%    stop(here)
     b_barCumu2(i,:)=cumsum(b_bar);
     b_bar2(i,:)=b_bar;
     b_barW2(i,:)=b_barW;
@@ -514,6 +515,7 @@ for i=1:length(surf)
     end
     result2(7*i-6:7*i,:)=[my_yr;cumsum(b_bar);b_bar;b_barW;b_barS;dateAMax;dateAMin];
   if get(handles.BAELA,'Value')==1
+   
     ela_ba_lm=fitlm(ELA,b_bar);
     figure(1);hold on
     scatter(ELA,b_bar,'k','filled')
@@ -540,10 +542,10 @@ if grad==1
 elseif grad==2
     folder='Gradient_Method';
 end
-seasonaloutput = ['../data/',glacier,'/Output/',folder,'/Output_',glacier,'_',surf3,'_',bal_name,'_seasonal.csv'];
-annualoutput = ['../data/',glacier,'/Output/',folder,'/Output_',glacier,'_',surf3,'_',bal_name,'_annual.csv'];
-myoutput = ['../data/',glacier,'/Output/',folder,'/Output_',glacier,'_',surf3,'_',bal_name,'_oldmb.csv'];
-gradientoutput = ['../data/',glacier,'/Output/',folder,'/Output_',glacier,'_',surf3,'_',bal_name,'Gradients.csv'];
+seasonaloutput = ['data/',glacier,'/Output/',folder,'/Output_',glacier,'_',surf3,'_',bal_name,'_seasonal.csv'];
+annualoutput = ['data/',glacier,'/Output/',folder,'/Output_',glacier,'_',surf3,'_',bal_name,'_annual.csv'];
+myoutput = ['data/',glacier,'/Output/',folder,'/Output_',glacier,'_',surf3,'_',bal_name,'_oldmb.csv'];
+gradientoutput = ['data/',glacier,'/Output/',folder,'/Output_',glacier,'_',surf3,'_',bal_name,'Gradients.csv'];
 
 Date = datestr([max_date;min_date],'yyyy/mm/dd',1950);
 SeasonalBalance_m_we = round([result2(4,:)';result2(5,:)'],1);
@@ -582,7 +584,6 @@ res_print(i,:)=sprintf('%4d %8.1f %8.1f %8.1f %8.1f %11.3f %11.3f', result2(1,i)
     end
     fclose(file); 
    
-% fileG=fopen(gradientoutput,'w');
 Year=result_G(1,:)';
 Winter_Gradients_m_we_km1=result_G(2:length(winter_gradients(:,1))+1,:)';
 Summer_Gradients_m_we_km1=result_G(length(winter_gradients(:,1))+2:(length(winter_gradients(:,1))*2)+1,:)';
@@ -591,13 +592,13 @@ ELA=result_G(end,:)';
 Mass_Maximum_Date=max_date;
 Mass_Minimum=min_date;
 if grad ==1
-    temp = table(Year,Winter_Gradients_m_we_km1,Summer_Gradients_m_we_km1,Annual_Gradients_m_we_km1,ELA,Mass_Maximum_Date,Mass_Minimum)
+    temp = table(Year,Winter_Gradients_m_we_km1,Summer_Gradients_m_we_km1,Annual_Gradients_m_we_km1,ELA,Mass_Maximum_Date,Mass_Minimum);
 
 writetable(temp,gradientoutput)
 
  
 elseif grad == 2
-     temp = table(Year,Winter_Gradients_m_we_km1,Summer_Gradients_m_we_km1,Annual_Gradients_m_we_km1,ELA,Mass_Maximum_Date,Mass_Minimum)
+     temp = table(Year,Winter_Gradients_m_we_km1,Summer_Gradients_m_we_km1,Annual_Gradients_m_we_km1,ELA,Mass_Maximum_Date,Mass_Minimum);
 
 writetable(temp,gradientoutput)
     
@@ -610,9 +611,7 @@ end
     plot([my_yr(1)-1,my_yr].',[0,b_barCumu2].',col,'color',col2)
     hold off;
     if err==1  %plot errorbars
-% surf =2 is off reference geometry,geodetic is conventional so can't have comparison
-% bal=2 is whole thing off model so doesn't make sense to check against geodetic
-        [errb,geod,Badj,UAF]=plotGeodetic(glacier,bal,my_yr,1,grad,b_weqG,b_weqGW,bal_name,folder,surf3,plot_ablation_model);
+        [errb,geod,Badj,UAF]=plotGeodetic(glacier,bal,surf,my_yr,1,grad,b_weqG,b_weqGW,bal_name,folder,surf3,plot_ablation_model);
         if ~isempty(geod) && ~isempty(UAF)
             first=geod(end,1); %first year that zero to
             ind=find(my_yr==first);
