@@ -48,11 +48,11 @@ dbstop if error
 		% the precip and temp data are both in matrix with years as columns 
 		% and day of hydrologic year as rows (starting with day 275). Make sure to correct them.
         
-		precip=load(['../data/',glacier,'/Input/Corrected_',glacier,'_Precipitation.mat']); %location of precip data for glacier
+		precip=load(['data/',glacier,'/Input/Corrected_',glacier,'_Precipitation.mat']); %location of precip data for glacier
         precip=precip.precip;
-		temp=load(['../data/',glacier,'/Input/Corrected_',glacier,'_Temperature.mat']);    %location of temperature data for glacier
+		temp=load(['data/',glacier,'/Input/Corrected_',glacier,'_Temperature.mat']);    %location of temperature data for glacier
         temp=temp.temp;
-        wx_info=importdata(['../data/',glacier,'/Input/Input_',glacier,'_Weather_Station_Information.csv']);% Weather station information. See template file 'GlacierWe_info.txt' in data subdirectory
+        wx_info=importdata(['data/',glacier,'/Input/Input_',glacier,'_Weather_Station_Information.csv']);% Weather station information. See template file 'GlacierWe_info.txt' in data subdirectory
         weatherAlt=wx_info(1);                                              % Altitdude of glacier weather station
         yrBeg = wx_info(2);                                                 %2 yrs before have a balance
         pre=wx_info(3);                                                     % this is the 
