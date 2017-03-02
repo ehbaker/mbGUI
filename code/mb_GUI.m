@@ -266,7 +266,7 @@ addpath functions
 %
 switch get(handles.UPDATE_POPUP,'Value') 
     case 1 %correct temp and precip data
-        ready=fixData(glacier);
+        ready=fillWxData(glacier);
         if ready==1
             set(handles.UPDATE_BUTTON,'string','Can now invert for params');
         else
