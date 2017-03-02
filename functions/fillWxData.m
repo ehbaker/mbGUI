@@ -6,11 +6,11 @@ function [ready]=fillWxData(glacier)
 dbstop if error
 
 formatSecondaryWxData(glacier); %correct/reformat data from cities
-        PrimaryWx=readtable(['../data/',glacier,'/Input/Input_',glacier,'_Daily_Weather.csv']); %Weather from the nearest Wx station
-        SecondaryWxNames=importdata(['../data/',glacier,'/Input/Input_',glacier,'_SecondaryWxData.csv']);  %file with names of secondary Wx stations
-        SecondaryWx1=readtable(cell2mat(['../data/',glacier,'/Input/SecondaryWxData/Output_',SecondaryWxNames(1),'data.csv'])); %
-        SecondaryWx2=readtable(cell2mat(['../data/',glacier,'/Input/SecondaryWxData/Output_',SecondaryWxNames(2),'data.csv'])); %
-        myweather=['../data/',glacier,'/Output_',glacier,'TempPrecipRegressions.txt']; % New regressions stored here
+        PrimaryWx=readtable(['data/',glacier,'/Input/Input_',glacier,'_Daily_Weather.csv']); %Weather from the nearest Wx station
+        SecondaryWxNames=importdata(['data/',glacier,'/Input/Input_',glacier,'_SecondaryWxData.csv']);  %file with names of secondary Wx stations
+        SecondaryWx1=readtable(cell2mat(['data/',glacier,'/Input/SecondaryWxData/Output_',SecondaryWxNames(1),'data.csv'])); %
+        SecondaryWx2=readtable(cell2mat(['data/',glacier,'/Input/SecondaryWxData/Output_',SecondaryWxNames(2),'data.csv'])); %
+        myweather=['data/',glacier,'/Output_',glacier,'TempPrecipRegressions.txt']; % New regressions stored here
         
         file = fopen(myweather,'w');
  
@@ -386,7 +386,7 @@ end
 hold off
 %
 fclose(file);
-cd('../data')
+cd('data')
 cd(glacier)
 save(['Corrected_',glacier,'Temp.mat'],'temp')
 save(['Corrected_',glacier,'Precip.mat'], 'precip')

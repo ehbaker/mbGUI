@@ -5,8 +5,8 @@ SecondaryData=importdata(['../data/',glacier,'/Input/Input_',glacier,'_Secondary
         
 for j = 1:2;
     name = SecondaryData(j);
-        mySecondary=cell2mat(['../data/',glacier,'/Input/SecondaryWxData/Input_',name,'data.csv']);
-        outdata =cell2mat(['../data/',glacier,'/Input/SecondaryWxData/Output_',name,'data.csv']);
+        mySecondary=cell2mat(['data/',glacier,'/Input/SecondaryWxData/Input_',name,'data.csv']);
+        outdata =cell2mat(['data/',glacier,'/Input/SecondaryWxData/Output_',name,'data.csv']);
        
 Secondary = readtable(mySecondary);
 
