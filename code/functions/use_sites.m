@@ -11,12 +11,8 @@ numnams=16; %if have more than 16 stakes ever, increase
 
 mysites=cell(numnams,1);
 
-                                            %NOTE!!!  if you add sites here, 
-                                            %also add sites to get_siteInd.m
-                                            %and revise kk distribution.
-                                            %also, add synthetic data to precipratio.csv 
         
-file = ['../data/',glacier,'/Input/Input_',glacier,'_Glaciological_Sites.csv'];
+file = ['data/',glacier,'/Input/Input_',glacier,'_Glaciological_Sites.csv'];
 sites=importdata(file);
 mysites(1:length(sites.textdata),1)=sites.textdata;
 
@@ -35,8 +31,7 @@ if ready==1
     extra_sites=[mysites(xtra_index,:)];
     
     end
-    %fclose(file1); 
-  
+
 end
         
         

@@ -20,12 +20,12 @@ function [ready]=fitBalGrad(glacier,balance_sites,grad)
 dbstop if error
 % switch glacier
 %     case 0
-        mydata = ['../data/',glacier,'/Input_',glacier,'_mb.csv'];
-        myAAD = ['../data/',glacier,'/Input_',glacier,'_AAD.csv'];
-        mybalgrad=['../data/',glacier,'/Output_',glacier,'BalGradReplacements.csv']; 
-        mymissinb=['../data/',glacier,'/Output_',glacier,'MissinB.csv']; 
-        myprecipratio =['../data/',glacier,'/Calibrated_',glacier,'PrecipRatio.csv'];
-        mymeltrate = ['../data/',glacier,'/Calibrated_',glacier,'Meltrate.csv'];
+        mydata = ['data/',glacier,'/Input_',glacier,'_mb.csv'];
+        myAAD = ['data/',glacier,'/Input_',glacier,'_AAD.csv'];
+        mybalgrad=['data/',glacier,'/Output_',glacier,'BalGradReplacements.csv']; 
+        mymissinb=['data/',glacier,'/Output_',glacier,'MissinB.csv']; 
+        myprecipratio =['data/',glacier,'/Calibrated_',glacier,'PrecipRatio.csv'];
+        mymeltrate = ['data/',glacier,'/Calibrated_',glacier,'Meltrate.csv'];
         lapse=-6.5; %moist adiabatic lapse rate 
 
 file = fopen(mybalgrad,'w');

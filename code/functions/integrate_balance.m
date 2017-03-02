@@ -133,22 +133,34 @@ elseif grad==2
    
 for i=1:length(my_yr)       
     stake_index=find(stake_zs(:,i)>0);
-    % get winter balance gradient and balance
-    winter_lm=fitlm(stake_zs(stake_index,i),b_weqW(stake_index,i));
-    winter_gradient(i)=double(cell2mat(table2cell(winter_lm.Coefficients(2,1))))*1000;
     bin_weights(:,1)=(gl_area(1:end)./sum(gl_area(1:end)));
+    % get winter balance gradient and balance
+    if isnan(b_weqW)
+        winter_gradient(i)=nan;
+         b_barW(i)=nan;
+    else
+    winter_lm=fitlm(stake_zs(stake_index,i),b_weqW(stake_index,i));
+    winter_gradient(i)=double(cell2mat(table2cell(winter_lm.Coefficients(2,1))))*1000; 
     bw_bin_values=predict(winter_lm,bin_centers');
     weighted_bw_bin_values(:,1)=bin_weights.*bw_bin_values;
     b_barW(i)=nansum(weighted_bw_bin_values(:,1));
-    
+    end
     % get summer balance gradient and balance
+    if isnan(b_weqS)
+        summer_gradient(i)=nan;
+         b_barS(i)=nan;
+    else
     summer_lm=fitlm(stake_zs(stake_index,i),b_weqS(stake_index,i));
     summer_gradient(i)=double(cell2mat(table2cell(summer_lm.Coefficients(2,1))))*1000;
     bs_bin_values=predict(summer_lm,bin_centers');
     weighted_bs_bin_values(:,1)=bin_weights.*bs_bin_values;
     b_barS(i)=nansum(weighted_bs_bin_values(:,1));    
-    
+    end
     % get annual gradient and balance
+    if isnan(b_weq)
+        annual_gradient(i)=nan;
+        b_bar(i)=nan;
+    else
     annual_lm=fitlm(stake_zs(stake_index,i),b_weq(stake_index,i));
     annual_gradient(i)=table2array(annual_lm.Coefficients(2,1));
     annual_gradient_yintercept(i)=table2array(annual_lm.Coefficients(1,1));
@@ -157,7 +169,7 @@ for i=1:length(my_yr)
     ba_bin_values=predict(annual_lm,bin_centers');
     weighted_ba_bin_values(:,1)=bin_weights.*ba_bin_values;
     b_bar(i)=nansum(weighted_ba_bin_values(:,1));  
-    
+    end
     if plot_integration==1
         figure(my_yr(i));hold on 
         subplot(1,3,1)

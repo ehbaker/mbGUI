@@ -19,11 +19,11 @@ function [b_weqW,b_weqS,b_weqG,b_weqGW,b_weq,b_barW,b_barS,b_bar,ELA,zone_weight
 %   meltrateI - meltrate for ice passed through 
 dbstop if error
 
-        mydata = ['../data/',glacier,'/Input/Input_',glacier,'_Glaciological_Data.csv'];
-        myAAD = ['../data/',glacier,'/Input/Input_',glacier,'_Area_Altitude_Distribution.csv'];
-        mymissinb=['../data/',glacier,'/Input/Input_',glacier,'_Missing_Glaciological_Data.csv'];
-        myprecipratio = ['../data/',glacier,'/Input/Calibrated_',glacier,'_Precipitation_Ratios.csv'];
-        mymeltrate = ['../data/',glacier,'/Input/Calibrated_',glacier,'_Degree_Day_Factors.csv'];
+        mydata = ['data/',glacier,'/Input/Input_',glacier,'_Glaciological_Data.csv'];
+        myAAD = ['data/',glacier,'/Input/Input_',glacier,'_Area_Altitude_Distribution.csv'];
+        mymissinb=['data/',glacier,'/Input/Input_',glacier,'_Missing_Glaciological_Data.csv'];
+        myprecipratio = ['data/',glacier,'/Input/Calibrated_',glacier,'_Precipitation_Ratios.csv'];
+        mymeltrate = ['data/',glacier,'/Input/Calibrated_',glacier,'_Degree_Day_Factors.csv'];
         lapse=-6.5; %moist adiabatic lapse rate 
 
 

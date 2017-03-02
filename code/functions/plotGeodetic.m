@@ -1,4 +1,4 @@
-function [errb,geod2,Badj,SEC2]=plotGeodetic(glacier,bal,my_yr,option,grad,b_weqG, b_weqGW,bal_name,folder,surf3,plot_ablation_model)
+function [errb,geod2,Badj,SEC2]=plotGeodetic(glacier,bal,surf,my_yr,option,grad,b_weqG, b_weqGW,bal_name,folder,surf3,plot_ablation_model)
 % Function calculates errorbars on cummulative
 % inputs
 %   glacier - 0 1 or 2 for the 2 glaciers and the test data
@@ -15,19 +15,19 @@ function [errb,geod2,Badj,SEC2]=plotGeodetic(glacier,bal,my_yr,option,grad,b_weq
 %
 dbstop if error
 %% Input file names
-        mygeod0 = ['../data/',glacier,'/Input/Input_',glacier,'_Geodetics.csv']; %wolverine dem differences, reevaluated by L Sass Spring 2012
-        mysec = ['../data/',glacier,'/Input/Input_',glacier,'_Altimetry.csv']; %secondary geodetic check, designed to run on laser altimetry but could be from other sources 
+        mygeod0 = ['data/',glacier,'/Input/Input_',glacier,'_Geodetics.csv']; %wolverine dem differences, reevaluated by L Sass Spring 2012
+        mysec = ['data/',glacier,'/Input/Input_',glacier,'_Altimetry.csv']; %secondary geodetic check, designed to run on laser altimetry but could be from other sources 
         err0=0.2; % m/area per year for index method, estimated by Rod March (1998, a gulkana data report)
-        mydata = ['../data/',glacier,'/Input/Input_',glacier,'_Glaciological_Data.csv'];
-        myAAD = ['../data/',glacier,'/Input/Input_',glacier,'_Area_Altitude_Distribution.csv'];
-        myprecipratio = ['../data/',glacier,'/Input/Calibrated_',glacier,'_Precipitation_Ratios.csv'];
-        mymeltrate = ['../data/',glacier,'/Input/Calibrated_',glacier,'_Degree_Day_Factors.csv'];
+        mydata = ['data/',glacier,'/Input/Input_',glacier,'_Glaciological_Data.csv'];
+        myAAD = ['data/',glacier,'/Input/Input_',glacier,'_Area_Altitude_Distribution.csv'];
+        myprecipratio = ['data/',glacier,'/Input/Calibrated_',glacier,'_Precipitation_Ratios.csv'];
+        mymeltrate = ['data/',glacier,'/Input/Calibrated_',glacier,'_Degree_Day_Factors.csv'];
 %% Output file names
-        mybal = ['../data/',glacier,'/Output/',folder,'/Output_',glacier,'_',surf3,'_',bal_name,'_oldmb.csv'];
-        mygeodetic=['../data/',glacier,'/Output/',folder,'/Output_',glacier,'_',surf3,'_',bal_name,'_Geodetic_Calibration.csv']; % geodetic measurements stored here
-        myaltimetry=['../data/',glacier,'/Output/',folder,'/Output_',glacier,'_',surf3,'_',bal_name,'_Altimetry_Comparison.csv']; % Altimetry measurements stored here
-        myadjseasonalbal=['../data/',glacier,'/Output/',folder,'/Output_',glacier,'_',surf3,'_',bal_name,'_Calibrated_Seasonal_Balance.csv']; % corrected balance time series stored here
-        myadjannualbal=['../data/',glacier,'/Output/',folder,'/Output_',glacier,'_',surf3,'_',bal_name,'_Calibrated_Annual_Balance.csv']; % corrected balance time series stored here
+        mybal = ['data/',glacier,'/Output/',folder,'/Output_',glacier,'_',surf3,'_',bal_name,'_oldmb.csv'];
+        mygeodetic=['data/',glacier,'/Output/',folder,'/Output_',glacier,'_',surf3,'_',bal_name,'_Geodetic_Calibration.csv']; % geodetic measurements stored here
+        myaltimetry=['data/',glacier,'/Output/',folder,'/Output_',glacier,'_',surf3,'_',bal_name,'_Altimetry_Comparison.csv']; % Altimetry measurements stored here
+        myadjseasonalbal=['data/',glacier,'/Output/',folder,'/Output_',glacier,'_',surf3,'_',bal_name,'_Calibrated_Seasonal_Balance.csv']; % corrected balance time series stored here
+        myadjannualbal=['data/',glacier,'/Output/',folder,'/Output_',glacier,'_',surf3,'_',bal_name,'_Calibrated_Annual_Balance.csv']; % corrected balance time series stored here
         lapse=-6.5; %moist adiabatic lapse rate 
 
 geod0 = importdata(mygeod0);%,'NumHeaderLines', 3, 'NumColumns', 5, 'Format', '%d %d %d %f %f');
@@ -121,6 +121,7 @@ if ~isempty(geod1) && option==1 % don't bother if doesn't exist
     endminadjd =zeros(maxStak,numGeod);
     obsmaxadjd =zeros(maxStak,numGeod);
     startmaxadjd =zeros(maxStak,numGeod);
+    stake_zs=nan*zeros(maxStak,numGeod);
     zone_weights=zeros(maxStak,numGeod);
     spring_max_date =zeros(maxStak,numGeod);
     fall_min_date =zeros(maxStak,numGeod);
@@ -138,6 +139,7 @@ if ~isempty(geod1) && option==1 % don't bother if doesn't exist
             % find ablation after date till end of year
             proc_index = proc_index00(1:prlen(i),i); %index of data avail for balance year
             zees = mbdb.data(proc_index,1); %index site altitudes needed for lapses
+            stake_zs(1:length(zees),i) = zees;
             f=prlen(i);
             siteM=siteAll(proc_index,:);
             photo_date = geod1(i,1:3);
@@ -158,33 +160,35 @@ if ~isempty(geod1) && option==1 % don't bother if doesn't exist
     end
 [win_date_numM, win_acc_adjM,  win_fxd_date_num, win_fxd_date_adj,net_date_numM, net_abl_adjM, annual_date_numM, annual_abl_adjM,search_min,search_max]=ablationmodel(geod1(i,1),zees,datespringobsM,datefallobsM,datenet,siteM,glacier,lapse,meltrateS,meltrateI,precipratio,plot_ablation_model1);
 
-if grad==1
-                zone_weights(1:f,i) = get_weights(bin_centers,gl_area,zees);
-            elseif grad==2||3 %don't want to use fake stakes here
-                zone_weights(1:f,i) = get_weightsGrad(bin_centers,gl_area,zees);
-            end
-[glacier_net_date,glacier_win_date,min_to_glacmin,max_to_glacmax]=glacierWide(geod1(i,1),win_date_numM, search_max, net_date_numM, search_min,glacier,zone_weights(1:f,i));
 
-            switch bal 
+           switch bal 
                 case 1 %we want only stratigraphic balances
                     end_abl_adjM = net_abl_adjM; 
                     begin_abl_adjM = win_acc_adjM; 
                     bal2='Stratigraphic Balance'; %for plotting
                     dat='min_dat = BAL';
                     end_date=round(nanmean(net_date_numM));
+                    spring_max_date(1:length(win_date_numM),i) = round(nanmean(win_date_numM)); %mass max dates for years of flights
+                    fall_min_date(1:length(net_date_numM),i) = round(nanmean(net_date_numM)); % mass min dates for years of flights
                 case 2 %Fixed date balance Hydro year
                     end_abl_adjM = annual_abl_adjM;
                     begin_abl_adjM = win_fxd_date_adj;
                     bal2='Fixed-Date Balance'; %for plotting
                     dat='min_dat = BAL';
                     end_date=round(nanmean(annual_abl_adjM));
-                case 3 %is from Oct 1 to Sept 30 == fixed-date
+                    spring_max_date(1:length(win_fxd_date_num),i) = round(nanmean(win_fxd_date_num)); %mass max dates for years of flights
+                    fall_min_date(1:length(annual_date_numM),i) = round(nanmean(annual_date_numM)); % mass min dates for years of flights
+                case 3 %FIxed-date system 
+                    zone_weights(1:f,i) = get_weights(bin_centers,gl_area,zees);
+                    [glacier_net_date,glacier_win_date,min_to_glacmin,max_to_glacmax]=glacierWide(geod1(i,1),win_date_numM, search_max, net_date_numM, search_min,glacier,zone_weights(1:f,i));
                     end_abl_adjM = min_to_glacmin;
                     begin_abl_adjM = max_to_glacmax;
                     bal2='Combine-Date System'; %for plotting
                     dat='min_dat = BAL';
                     end_date=glacier_net_date;
-            end
+                    spring_max_date(1:length(glacier_win_date),i) = glacier_win_date; %mass max dates for years of flights
+                    fall_min_date(1:length(glacier_win_date),i) = glacier_net_date; % mass min dates for years of flights
+            end 
             
         else % geod(i,1)~=my_yr(1) at 0 cummulative yr, skip
             geod1(i,4)=0;
@@ -193,8 +197,8 @@ if grad==1
         gl_areaTot(i)=sum(gl_area);
         stakeB(:,i)=b_weqG(:,index(i));
         S_stakeB(:,i)=b_weqG(:,index(i)) - b_weqGW(:,index(i));
-        spring_max_date(1:length(glacier_win_date),i) = glacier_win_date;
-        fall_min_date(1:length(glacier_win_date),i) = glacier_net_date;
+%         spring_max_date(1:length(glacier_win_date),i) = glacier_win_date;
+%         fall_min_date(1:length(glacier_win_date),i) = glacier_net_date;
         for a = 1:length(spring_max_date(:,1));
             photoday(a,i) = datenum(photo_date);
         end
@@ -218,9 +222,7 @@ if grad==1
     
     b_baradj_p_original = (obsminadjd+endminadjd);
     
-    
-    %b_baradj_p = b_baradj_p_original; %models melt from flight date to end of season
-    %b_baradj_p = b_bar_max_sub; %models melt from beginning to flight date
+
     b_baradj_p = b_bar_max_sub.*R_after + b_baradj_p_original.*R_before; %hybrid, uses proportions of each model based on flight date
     
     % from scaling, delta_volume=ca*( area^gamma-previous_area^gamma )
@@ -244,8 +246,8 @@ if grad==1
             end
         end
     end
-  
-    b_baradj=sum(b_baradj_p2.*zone_weights);
+      [ ~,~, ~,~,~,b_baradj,~] = integrate_balance(NaN,NaN,b_baradj_p2,AADs,geod1(:,1)',stake_zs,grad,surf,0);
+
 
     
     geod2a=[geod1(:,1),geod1(:,4)+b_baradj.',geod1(:,5)];
@@ -365,6 +367,7 @@ end
     endminadjd =zeros(maxStak,numSEC);
     obsmaxadjd =zeros(maxStak,numSEC);
     startmaxadjd =zeros(maxStak,numSEC);
+    stake_zs=nan*zeros(maxStak,numSEC);
     zone_weights =zeros(maxStak,numSEC);
     spring_max_date =zeros(maxStak,numSEC);
     fall_min_date =zeros(maxStak,numSEC);
@@ -382,6 +385,7 @@ end
             % find ablation after date till end of year
             proc_indexSEC = proc_index00SEC(1:prlenSEC(i),i); %index of data avail for balance year
             zees = mbdb.data(proc_indexSEC,1); %index site altitudes needed for lapses
+            stake_zs(1:length(zees),i) = zees;
             f=prlenSEC(i);
             siteM=siteAll(proc_indexSEC,:);
             flight_date = SEC1(i,1:3);
@@ -402,12 +406,6 @@ end
              end
              
 [win_date_numM, win_acc_adjM, win_fxd_date_num, win_fxd_date_adj, net_date_numM, net_abl_adjM, annual_date_numM, annual_abl_adjM,search_min,search_max]=ablationmodel(SEC1(i,1),zees,datespringobsM,datefallobsM,datenet,siteM,glacier,lapse,meltrateS,meltrateI,precipratio,plot_ablation_model1);
-            if grad==1
-                zone_weights(1:f,i) = get_weights(bin_centers,gl_areaSEC,zees);
-            elseif grad==2||3 %don't want to use fake stakes here
-                zone_weights(1:f,i) = get_weightsGrad(bin_centers,gl_areaSEC,zees);
-            end
-[glacier_net_date,glacier_win_date,min_to_glacmin,max_to_glacmax]=glacierWide(SEC1(i,1),win_date_numM, search_max, net_date_numM, search_min,glacier,zone_weights(1:f,i));
            switch bal 
                 case 1 %we want only stratigraphic balances
                     end_abl_adjM = net_abl_adjM; 
@@ -415,18 +413,26 @@ end
                     bal2='Stratigraphic Balance'; %for plotting
                     dat='min_dat = BAL';
                     end_date=round(nanmean(net_date_numM));
+                    spring_max_date(1:length(win_date_numM),i) = round(nanmean(win_date_numM)); %mass max dates for years of flights
+                    fall_min_date(1:length(net_date_numM),i) = round(nanmean(net_date_numM)); % mass min dates for years of flights
                 case 2 %Fixed date balance Hydro year
                     end_abl_adjM = annual_abl_adjM;
                     begin_abl_adjM = win_fxd_date_adj;
                     bal2='Fixed-Date Balance'; %for plotting
                     dat='min_dat = BAL';
                     end_date=round(nanmean(annual_abl_adjM));
-                case 3 %is from Oct 1 to Sept 30 == fixed-date
+                    spring_max_date(1:length(win_fxd_date_num),i) = round(nanmean(win_fxd_date_num)); %mass max dates for years of flights
+                    fall_min_date(1:length(annual_date_numM),i) = round(nanmean(annual_date_numM)); % mass min dates for years of flights
+                case 3 %FIxed-date system 
+                    zone_weights(1:f,i) = get_weights(bin_centers,gl_areaSEC,zees);
+                    [glacier_net_date,glacier_win_date,min_to_glacmin,max_to_glacmax]=glacierWide(SEC1(i,1),win_date_numM, search_max, net_date_numM, search_min,glacier,zone_weights(1:f,i));
                     end_abl_adjM = min_to_glacmin;
                     begin_abl_adjM = max_to_glacmax;
                     bal2='Combine-Date System'; %for plotting
                     dat='min_dat = BAL';
                     end_date=glacier_net_date;
+                    spring_max_date(1:length(glacier_win_date),i) = glacier_win_date; %mass max dates for years of flights
+                    fall_min_date(1:length(glacier_win_date),i) = glacier_net_date; % mass min dates for years of flights
             end 
 
            
@@ -434,13 +440,13 @@ end
             SEC1(i,4)=0;
             SEC1(i,5)=0;
         end
-        gl_areaTotSEC(i)=sum(gl_areaSEC);
-        stakeBSEC(:,i)=b_weqG(:,indexSEC(i));
-        S_stakeBSEC(:,i)=b_weqG(:,indexSEC(i))-b_weqGW(:,indexSEC(i));
-        spring_max_date(1:length(glacier_win_date),i) = glacier_win_date;
-        fall_min_date(1:length(glacier_win_date),i) = glacier_net_date;
+        gl_areaTotSEC(i)=sum(gl_areaSEC); %glacier area for each flight
+        stakeBSEC(:,i)=b_weqG(:,indexSEC(i)); % pull out annual stake balances for flight years
+        S_stakeBSEC(:,i)=b_weqG(:,indexSEC(i))-b_weqGW(:,indexSEC(i));% pull out stake summer balances for flight years
+%         spring_max_date(1:length(glacier_win_date),i) = glacier_win_date; %mass max dates for years of flights
+%         fall_min_date(1:length(glacier_win_date),i) = glacier_net_date; % mass min dates for years of flights
         for a = 1:length(spring_max_date);
-            flyday(a,i) = datenum(flight_date);
+            flyday(a,i) = datenum(flight_date); %get date number of each flight date
         end
     end
     
@@ -448,8 +454,8 @@ end
     [m,n] = size(b_bar_model_max);
     b_bar_max_sub = S_stakeBSEC(1:m,1:n) + b_bar_model_max;
     
-    L_summer = fall_min_date-spring_max_date;
-    R_after = (fall_min_date-flyday)./L_summer;
+    L_summer = fall_min_date-spring_max_date; %determine the length of ablation season
+    R_after = (fall_min_date-flyday)./L_summer; % get ratio of flight date to mass minimum 
     infind = find(isinf(R_after)==1);
     R_after(infind) = 0;
     ind_early = find(R_after>=1);
@@ -461,9 +467,6 @@ end
     
     b_baradj_p_original = (obsminadjd+endminadjd);
     
-    
-    %b_baradj_p = b_baradj_p_original; %models melt from flight date to end of season
-    %b_baradj_p = b_bar_max_sub; %models melt from beginning to flight date
     b_baradj_p = b_bar_max_sub.*R_after + b_baradj_p_original.*R_before; %hybrid, uses proportions of each model based on flight date
     
     [m,n]=size(b_baradj_p);
@@ -489,8 +492,8 @@ end
             
         end
     end
-  
-    b_baradj=sum(b_baradj_p2.*zone_weights);
+    [ ~,~, ~,~,~,b_baradj,~] = integrate_balance(NaN,NaN,b_baradj_p2,AADs,SEC1(:,1)',stake_zs,grad,surf,0);
+    
     
     SEC2a=[SEC1(:,1),SEC1(:,4)+b_baradj.',SEC1(:,5)];
     SEC2=[SEC2a(:,1),SEC2a(:,2)-SEC2a(1,2)*ones(numSEC,1),SEC2a(:,3)]; %normalize to first year
@@ -519,8 +522,5 @@ fprintf(1,'SELECTION OR BECAUSE NOT PLOTTING CONVENTIONAL BALANCE.\r\n');
 end
 
 errb=(err0^2*abs(my_yr(2:end).'-year1*ones(numYrs-1,1))).^0.5;%error propagation over years for cummulative
-% stop_this_shit_here(57)
 end
-
-%stop_this_shit_here(57)
     
