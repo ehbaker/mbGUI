@@ -251,8 +251,6 @@ end
 
 function UPDATE_BUTTON_Callback(hObject, eventdata, handles)
 % Get user input from GUI
-clear all
-close all
 mydir = pwd;                                            %gets present working directory
 glacier = str2mat(get(handles.Call_Glacier,'String'))   %get glacier entered
  grad = get(handles.GRAD_POPUP,'Value');                %get gradients you are using
@@ -270,7 +268,7 @@ addpath functions
 %
 switch get(handles.UPDATE_POPUP,'Value') 
     case 1 %correct temp and precip data
-        ready=fixData(glacier);
+        ready=fillWxData(glacier);
         if ready==1
             set(handles.UPDATE_BUTTON,'string','Can now invert for params');
         else
