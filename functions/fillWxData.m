@@ -14,20 +14,40 @@ formatSecondaryWxData(glacier); %correct/reformat data from cities
         
         file = fopen(myweather,'w');
  
-precip=PrimaryWx.Precipitation;
-temp=PrimaryWx.Temperature;
-
-index1 = find(PrimaryWx.date==SecondaryWx1.date(1));
-l1 = length(SecondaryWx1.date);
-index2 = find(PrimaryWx.date==SecondaryWx1.date(2));
-l2 = length(SecondaryWx2.date);
+PrimaryWx.date = datetime(PrimaryWx.date);
+SecondaryWx1.date = datetime(SecondaryWx1.date);
+SecondaryWx2.date = datetime(SecondaryWx2.date);
+AllWx_t = outerjoin(PrimaryWx, SecondaryWx1,'Keys','date','MergeKeys',1); %
+AllWx = outerjoin(AllWx_t, SecondaryWx2,'Keys','date','MergeKeys',1); %make 1 big table organized by date
+AllWx.Properties.VariableNames = {'date' 'T_primary' 'P_primary' 'T_secondary1' 'P_secondary1' 'T_secondary2' 'P_secondary2'};
 
 figure (); hold on
+title(['Monthly temperature regressions ',glacier, 'Glacier'])
+monthofyear = month(AllWx.date,'monthofyear');
+for m = 1:12;
+    index = find(monthofyear==m);
+    tbl1 = table(AllWx.T_primary(index),AllWx.T_secondary1(index));
+    lm1 = fitlm(tbl1,'linear');
+    tbl2 = table(AllWx.T_primary(index),AllWx.T_secondary2(index));
+    lm2 = fitlm(tbl2,'linear');
+    
+    mth(m) = m;
+    int1(m) = lm1.Coefficients.Estimate(1);
+    slp1(m) = lm1.Coefficients.Estimate(2);
+    rsq1(m) = lm1.Rsquared.Ordinary;
+    int2(m) = lm2.Coefficients.Estimate(1);
+    slp2(m) = lm2.Coefficients.Estimate(2);
+    rsq2(m) = lm2.Rsquared.Ordinary;
+  
+    subplot(3,4,m)
+    scatter(tbl1.Var1,tbl1.Var2, 'r+'); hold on
+    scatter(tbl2.Var1, tbl2.Var2, 'b+'); hold on
+    title(m)
+    
+end
+  stop(here)
 
-scatter(PrimaryWx.Temperature(index1:index1+l1),SecondaryWx1.Temperature, 'r+'); hold on
-scatter(PrimaryWx.Temperature(index2:index2+l2),SecondaryWx2.Temperature, 'b+'); hold on
 
-stop(here)
 % do regressions
 beta1=NaN*ones(12,2);
 beta2=NaN*ones(12,2);
@@ -58,7 +78,7 @@ kk=0;
 kkk=0;
 for cc=1:nt % go through the hydro years 
     for rr=1:mt % go through the hydro days            
-        if isnan(temp(rr,cc))
+        if isnan(primary_temp(rr,cc))
             if mod(cc+yrBeg,4)~=0  % this is not a leap year, all leapyrs divisible by 4 leap year 
                 ly=365;
             else
@@ -73,33 +93,33 @@ for cc=1:nt % go through the hydro years
             else
                 yrRow=2;
             end
-            month = cityPT(cityInd,2);
+            oldmonth = cityPT(cityInd,2);
             if ( isempty(cityInd) || isnan(minT) || isnan(maxT) ) && (rr+1<=ly && rr-1>=1)
-                Tnew=(temp(rr-1,cc)+temp(rr+1,cc))/2; % not good, but will do for now. %if no data for city, so average of before and after
+                Tnew=(primary_temp(rr-1,cc)+primary_temp(rr+1,cc))/2; % not good, but will do for now. %if no data for city, so average of before and after
                 kkk=kkk+1;
             elseif (isempty(cityInd)||isnan(minT)||isnan(maxT))&&(rr+1>ly || rr-1<1)    
                 Tnew=NaN;
             else
-                Tnew=Mf(yrRow,month).*mean([minT,maxT])-Ms(yrRow,month);   
+                Tnew=Mf(yrRow,oldmonth).*mean([minT,maxT])-Ms(yrRow,oldmonth);   
                 kk=kk+1;
             end
             if isnan(Tnew)&&~isempty(cityInd-1)&&~isempty(cityInd+1)&&(rr+1<=ly && rr-1>=1) %average again  
                 minT=mean([cityPT(cityInd-1,6),cityPT(cityInd+1,6)]);
                 maxT=mean([cityPT(cityInd-1,5),cityPT(cityInd+1,5)]);
-                Tnew=Mf(yrRow,month).*mean([minT,maxT])-Ms(yrRow,month);
+                Tnew=Mf(yrRow,oldmonth).*mean([minT,maxT])-Ms(yrRow,oldmonth);
                 kk=kk+1;
             end
             if isnan(Tnew) && (rr+2<=ly && rr-2>=1) %and again
-                Tnew=(temp(rr-2,cc)+temp(rr+2,cc))/2;   
+                Tnew=(primary_temp(rr-2,cc)+primary_temp(rr+2,cc))/2;   
                 kkk=kkk+1;
             end
             if isnan(Tnew)&&~isempty(cityInd-2)&&~isempty(cityInd+2)&&(rr+2<=ly && rr-2>=1) %and again
                 minT=mean([cityPT(cityInd-2,6),cityPT(cityInd+2,6)]);
                 maxT=mean([cityPT(cityInd-2,5),cityPT(cityInd+2,5)]);
-                Tnew=Mf(yrRow,month).*mean([minT,maxT])-Ms(yrRow,month);
+                Tnew=Mf(yrRow,oldmonth).*mean([minT,maxT])-Ms(yrRow,oldmonth);
                 kk=kk+1;
             end
-            temp(rr,cc)=Tnew;
+            primary_temp(rr,cc)=Tnew;
         end
     end
 end
@@ -112,10 +132,10 @@ k=0;
 avgtemp=NaN*ones(mt,1);
 for rr=1:mt  % go through the hydro days
 %these are the daily averages over all years, if there is a missing data point, use the day average
-	avgtemp(rr)=gmean(temp(rr,1:nt)); 
+	avgtemp(rr)=gmean(primary_temp(rr,1:nt)); 
     for cc=1:nt % go through the hydro years 
-        if isnan(temp(rr,cc))
-            temp(rr,cc)=avgtemp(rr);
+        if isnan(primary_temp(rr,cc))
+            primary_temp(rr,cc)=avgtemp(rr);
             k=k+1;
         end
     end
@@ -127,7 +147,7 @@ fprintf(1,'%d of %d temps have been replaced by average temp over all yrs of tha
 m0=0;
 for cc=1:nt % go through the hydro years    
     for rr=1:mt  % go through the hydro days
-        if isnan(temp(rr,cc))
+        if isnan(primary_temp(rr,cc))
             m0=m0+1;
         end
     end
@@ -164,7 +184,7 @@ for ff=1:m1
     [date2hy,date2y]=caltohy(date2(ff,2),date2(ff,1)); 
     date2y=date2y-yrBeg;   % if its in one hydro year, need only one - date2y is the hydro year.
     % column for the year.
-    precip(date1hy:date2hy,date2y)=newprecip;
+    primary_precip(date1hy:date2hy,date2y)=newprecip;
 end
 % now do like did for temp
 %
@@ -174,21 +194,21 @@ yprecip2=zeros(numyrs2*31,12);
 xprecip2=zeros(numyrs2*31,12);
 for cc=1:np % go through the hydro years 
     for rr=1:mp % go through the hydro days
-        if ~isnan(precip(rr,cc))
+        if ~isnan(primary_precip(rr,cc))
             cityInd=find(cityHy(:,1)==cc+yrBeg & cityHy(:,2)==rr);
             P=cityPT(cityInd,4);           
             if ~isempty(cityInd)&&~isnan(P)
-                %need year,month,day index to build regression matrices
+                %need year,oldmonth,day index to build regression matrices
                 m = cityPT(cityInd,2);
                 d = cityPT(cityInd,3);
                 if cityPT(cityInd,1)<yrSplit
                     c=cityPT(cityInd,1)-(yrBeg-1);
                 	xprecip1((c-1)*31+d,m)= P; 
-                    yprecip1((c-1)*31+d,m)= precip(rr,cc);
+                    yprecip1((c-1)*31+d,m)= primary_precip(rr,cc);
                 else
                     c=cityPT(cityInd,1)-(yrSplit-1);
                 	xprecip2((c-1)*31+d,m)= P; 
-                    yprecip2((c-1)*31+d,m)= precip(rr,cc);
+                    yprecip2((c-1)*31+d,m)= primary_precip(rr,cc);
                 end
             end
         end
@@ -219,23 +239,23 @@ RsqP=ones(2,12)-[SSE1./SST1;SSE2./SST2];
 kk=0;
 for cc=1:np % go through the hydro years   
     for rr=1:mp  % go through the hydro days
-        if isnan(precip(rr,cc))
+        if isnan(primary_precip(rr,cc))
             cityInd=find(cityHy(:,1)==cc+yrBeg & cityHy(:,2)==rr);
             P=cityPT(cityInd,4);            
-            %need year index and month index for regression coeffs
+            %need year index and oldmonth index for regression coeffs
             if cityPT(cityInd,1)<yrSplit
                 yrRow=1;
             else
                 yrRow=2;
             end
-            month = cityPT(cityInd,2);
+            oldmonth = cityPT(cityInd,2);
             if isempty(cityInd)||isnan(P) %if no data for city
                 Pnew=NaN;
             else
-                Pnew=Pf(yrRow,month).*P;   
+                Pnew=Pf(yrRow,oldmonth).*P;   
                 kk=kk+1;
             end
-            precip(rr,cc)=Pnew;
+            primary_precip(rr,cc)=Pnew;
         end
     end
 end
@@ -247,10 +267,10 @@ avgprecip=NaN*ones(mp,1);
 k=0;
 for rr=1:mp  % go through the hydro days 
 %these are the daily averages over all years, if there is still a missing data point, use the day average 
-	avgprecip(rr)=gmean(precip(rr,1:np));
+	avgprecip(rr)=gmean(primary_precip(rr,1:np));
     for cc=1:np %go through the hydro years 
-        if isnan(precip(rr,cc))
-            precip(rr,cc)=avgprecip(rr);
+        if isnan(primary_precip(rr,cc))
+            primary_precip(rr,cc)=avgprecip(rr);
             k=k+1;
         end
     end
@@ -262,7 +282,7 @@ fprintf(file,'%d of %d precips have been replaced by average precip over all yrs
 m2=0;
 for rr=1:mp  % go through the hydro days    
     for cc=1:np %go through the hydro years
-        if isnan(precip(rr,cc))
+        if isnan(primary_precip(rr,cc))
             m2=m2+1;
         end
     end
@@ -275,9 +295,9 @@ end
 %
 % print to metadata and screen and plot regressions
 %
-months='JanFebMarAprMayJunJulAugSepOctNovDec';
+oldmonths='JanFebMarAprMayJunJulAugSepOctNovDec';
 fprintf(file,'Temp(glacier_met_station) = Mf*Temp(city_met_station) - Ms\r\n');
-fprintf(file,'Mf & Ms have monthly values and Rsquareds\r\n');
+fprintf(file,'Mf & Ms have oldmonthly values and Rsquareds\r\n');
 if yrBeg~=yrSplit %don't print out if no split
     fprintf(file,'Using the weather data from %s, calendar year %4d to %4d\r\n',cell2mat(SecondaryWx1),yrBeg,yrSplit);
     fprintf(file,'       Jan    Feb    Mar    Apr    May    Jun    Jul    Aug    Sep    Oct    Nov    Dec  \r\n');
@@ -292,7 +312,7 @@ fprintf(file,' Ms=[%6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %
 fprintf(file,'Rsq=[%6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f]\r\n',Rsq(2,1:12));
 %
 fprintf(1,'Temp(glacier_met_station) = Mf*Temp(city_met_station) - Ms\n');
-fprintf(1,'Mf & Ms have monthly values and Rsquareds\n');
+fprintf(1,'Mf & Ms have oldmonthly values and Rsquareds\n');
 if yrBeg~=yrSplit %don't print out if no split
     fprintf(1,'Using the city of %s, calendar year %4d to %4d\n',cell2mat(SecondaryWx1),yrBeg,yrSplit);
     fprintf(1,'       Jan    Feb    Mar    Apr    May    Jun    Jul    Aug    Sep    Oct    Nov    Dec  \n');
@@ -305,7 +325,7 @@ if yrBeg~=yrSplit %don't print out if no split
         x=xtemp1(:,2*mm-1);
         xx=min(x)-2:max(x)+2;
         subplot(3,4,mm), plot(x,ytemp1(:,mm),'b*',xx,Mf(1,mm)*xx-Ms(1,mm).','r--');
-        name=sprintf('%s: Tg = %6.3f*Tc -%6.3f in degC',months(3*mm-2:3*mm),Mf(1,mm),Ms(1,mm));
+        name=sprintf('%s: Tg = %6.3f*Tc -%6.3f in degC',oldmonths(3*mm-2:3*mm),Mf(1,mm),Ms(1,mm));
         title(name,'fontsize',10);
         ylabel('glacier','fontsize',10);
         xlabel(cell2mat(SecondaryWx1),'fontsize',10);
@@ -324,7 +344,7 @@ for mm=1:12
     x=xtemp2(:,2*mm-1);
     xx=min(x)-2:max(x)+2;
     subplot(3,4,mm), plot(x,ytemp2(:,mm),'b*',xx,Mf(2,mm)*xx-Ms(2,mm),'r--');
-    name=sprintf('%s: Tg = %6.3f*Tc -%6.3f in degC',months(3*mm-2:3*mm),Mf(2,mm),Ms(2,mm));
+    name=sprintf('%s: Tg = %6.3f*Tc -%6.3f in degC',oldmonths(3*mm-2:3*mm),Mf(2,mm),Ms(2,mm));
     title(name,'fontsize',10);
     ylabel('glacier','fontsize',10);
     xlabel(cell2mat(SecondaryWx2),'fontsize',10);
@@ -333,7 +353,7 @@ end
 hold off
 %
 fprintf(file,'Prec(glacier_met_station) = Pf*Prec(city_met_station)\r\n');
-fprintf(file,'Pf has monthly values and Rsquareds\r\n');
+fprintf(file,'Pf has oldmonthly values and Rsquareds\r\n');
 if yrBeg~=yrSplit %don't print out if no split
     fprintf(file,'Using the city of %s, calendar year %4d to %4d\r\n',cell2mat(SecondaryWx1),yrBeg,yrSplit);
     fprintf(file,'       Jan    Feb    Mar    Apr    May    Jun    Jul    Aug    Sep    Oct    Nov    Dec  \r\n');
@@ -346,7 +366,7 @@ fprintf(file,' Pf=[%6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %
 fprintf(file,'Rsq=[%6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f]\r\n',RsqP(2,1:12));
 %
 fprintf(1,'Prec(glacier_met_station) = Pf*Prec(city_met_station)\n');
-fprintf(1,'Pf has monthly values and Rsquareds\n');
+fprintf(1,'Pf has oldmonthly values and Rsquareds\n');
 if yrBeg~=yrSplit %don't print out if no split
     fprintf(1,'Using the city of %s, calendar year %4d to %4d\n',cell2mat(SecondaryWx1),yrBeg,yrSplit);
     fprintf(1,'       Jan    Feb    Mar    Apr    May    Jun    Jul    Aug    Sep    Oct    Nov    Dec  \n');
@@ -358,7 +378,7 @@ if yrBeg~=yrSplit %don't print out if no split
         x=xprecip1(:,mm);
         xx=min(x):max(x)+2;
         subplot(3,4,mm), plot(x,yprecip1(:,mm),'b*',xx,Pf(1,mm)*xx.','r--');
-        name=sprintf('%s: Pg = %6.3f*Pc in mm',months(3*mm-2:3*mm),Pf(1,mm));
+        name=sprintf('%s: Pg = %6.3f*Pc in mm',oldmonths(3*mm-2:3*mm),Pf(1,mm));
         title(name,'fontsize',10);
         ylabel('glacier','fontsize',10);
         xlabel(cell2mat(SecondaryWx1),'fontsize',10);
@@ -376,7 +396,7 @@ for mm=1:12
     x=xprecip2(:,mm);
     xx=min(x):max(x)+2;
     subplot(3,4,mm), plot(x,yprecip2(:,mm),'b*',xx,Pf(2,mm)*xx,'r--');
-    name=sprintf('%s: Pg = %6.3f*Pc in mm',months(3*mm-2:3*mm),Pf(2,mm));
+    name=sprintf('%s: Pg = %6.3f*Pc in mm',oldmonths(3*mm-2:3*mm),Pf(2,mm));
     title(name,'fontsize',10);
     ylabel('glacier','fontsize',10);
     xlabel(cell2mat(SecondaryWx2),'fontsize',10);
