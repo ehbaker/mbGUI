@@ -14,10 +14,10 @@ Secondary.Maximum_TemperatureInF(Secondary.Maximum_TemperatureInF==9999)=nan; %r
 Secondary.Minimum_TemperatureInF(Secondary.Minimum_TemperatureInF==9999)=nan;
 Secondary.PrecipitationInInches(Secondary.PrecipitationInInches==9999)=nan;
 date = Secondary.Date;
-Temperature_C = ((Secondary.Maximum_TemperatureInF - 32)*(5/9) + (Secondary.Minimum_TemperatureInF - 32)*(5/9))/2;
-Precipitation_mm = Secondary.PrecipitationInInches * 25.4;
+Temperature = ((Secondary.Maximum_TemperatureInF - 32)*(5/9) + (Secondary.Minimum_TemperatureInF - 32)*(5/9))/2;
+Precipitation = Secondary.PrecipitationInInches * 25.4;
 
-newSecondary = table(date,Temperature_C,Precipitation_mm);
+newSecondary = table(date,Temperature,Precipitation);
 writetable(newSecondary,outdata);
 end
 end
