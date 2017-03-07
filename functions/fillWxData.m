@@ -80,6 +80,7 @@ Pnancount(1) = sum(isnan(filledP));
 figure (); hold on 
 for m = 1:12;
     %%linear regression
+    index = find(monthofyear==m);
     tbl1 = table(AllWx.P_primary(index),AllWx.P_secondary1(index));
     lm1 = fitlm(tbl1,'linear'); 
     tbl2 = table(AllWx.P_primary(index),AllWx.P_secondary2(index));
