@@ -30,37 +30,38 @@ Tnancount(2) = sum(isnan(filledT));
 figure (); hold on 
 title(['Monthly temperature regressions ',glacier, 'Glacier'])
 monthofyear = month(AllWx.date,'monthofyear');
+MonthlyTemperatureRegressions = table;
 for m = 1:12;
-    %%linear regression
+    %%iteratively reweighted least squares regression
     index = find(monthofyear==m);
-    tbl1 = table(AllWx.T_primary(index),AllWx.T_secondary1(index));
-    lm1 = fitlm(tbl1,'linear'); 
-    tbl2 = table(AllWx.T_primary(index),AllWx.T_secondary2(index));
-    lm2 = fitlm(tbl2,'linear');
+    X = AllWx.T_primary(index);
+    Y1 = AllWx.T_secondary1(index);
+    Y2 = AllWx.T_secondary2(index);
+    [b1 stats1] = robustfit(X,Y1);
+    [b2 stats2] = robustfit(X,Y2);
     
-    %%store the coefficients
-    mth(m) = m;
-    int1(m) = lm1.Coefficients.Estimate(1);
-    slp1(m) = lm1.Coefficients.Estimate(2);
-    rsq1(m) = lm1.Rsquared.Ordinary;
-    int2(m) = lm2.Coefficients.Estimate(1);
-    slp2(m) = lm2.Coefficients.Estimate(2);
-    rsq2(m) = lm2.Rsquared.Ordinary;
+    %%store the coefficients in a table
+    MonthlyTemperatureRegressions.month(m,1) = m;
+    MonthlyTemperatureRegressions.intercept1(m,1) = b1(1);
+    MonthlyTemperatureRegressions.slope1(m,1) = b1(2);
+    MonthlyTemperatureRegressions.rsquared1(m,1) = corr(Y1(~isnan(Y1) & ~isnan(X)),b1(1) + b1(2)*X(~isnan(Y1) & ~isnan(X)))^2;
+    MonthlyTemperatureRegressions.intercept2(m,1) = b2(1);
+    MonthlyTemperatureRegressions.slope2(m,1) = b2(2);
+    MonthlyTemperatureRegressions.rsquared2(m,1) = corr(Y2(~isnan(Y2) & ~isnan(X)),b2(1) + b2(2)*X(~isnan(Y2) & ~isnan(X)))^2;
     
     %%plot the regression
     subplot(3,4,m)
-    scatter(tbl1.Var1,tbl1.Var2, 'r+'); hold on
-    scatter(tbl2.Var1, tbl2.Var2, 'b+'); hold on
+    scatter(X,Y1, 'r+'); hold on
+    scatter(X,Y2, 'b+'); hold on
     title(m)
     
     %%fill gaps
     index1 = find(monthofyear==m & isnan(filledT));
-    filledT(index1) = AllWx.T_secondary1(index1).*slp1(m) + int1(m);
+    filledT(index1) = b1(1) + AllWx.T_secondary1(index1).*b1(2);
     index2 = find(monthofyear==m & isnan(filledT));
-    filledT(index2) = AllWx.T_secondary2(index2).*slp2(m) + int2(m);
+    filledT(index2) = b2(1) + AllWx.T_secondary2(index2).*b2(2);
 end
 Tnancount(3) = sum(isnan(filledT));
-MonthlyTemperatureRegressions = table(mth,slp1,int1,rsq1,slp2,int2,rsq2,{'month','slope1','intercept1','rsquared1','slope2','intercept2','rsquared2'});
 writetable(MonthlyTemperatureRegressions,outputTemperatureRegressions)
 
 %%Fill the remaining NaNs with the average daily temperature
@@ -78,37 +79,39 @@ Pnancount(1) = sum(isnan(filledP));
 
 %%Calculate monthly precipitation regressions and fill
 figure (); hold on 
+MonthlyPrecipitationRegressions = table;
 for m = 1:12;
-    %%linear regression
+    %%iteratively reweighted least squares regression
     index = find(monthofyear==m);
-    tbl1 = table(AllWx.P_primary(index),AllWx.P_secondary1(index));
-    lm1 = fitlm(tbl1,'linear'); 
-    tbl2 = table(AllWx.P_primary(index),AllWx.P_secondary2(index));
-    lm2 = fitlm(tbl2,'linear');
+    X = AllWx.P_primary(index);
+    Y1 = AllWx.P_secondary1(index);
+    Y2 = AllWx.P_secondary2(index);
+    [b1 stats1] = robustfit(X,Y1);
+    [b2 stats2] = robustfit(X,Y2);
     
-    %%store the coefficients
-    int1(m) = lm1.Coefficients.Estimate(1);
-    slp1(m) = lm1.Coefficients.Estimate(2);
-    rsq1(m) = lm1.Rsquared.Ordinary;
-    int2(m) = lm2.Coefficients.Estimate(1);
-    slp2(m) = lm2.Coefficients.Estimate(2);
-    rsq2(m) = lm2.Rsquared.Ordinary;
+   %%store the coefficients in a table
+    MonthlyPrecipitationRegressions.month(m,1) = m;
+    MonthlyPrecipitationRegressions.intercept1(m,1) = b1(1);
+    MonthlyPrecipitationRegressions.slope1(m,1) = b1(2);
+    MonthlyPrecipitationRegressions.rsquared1(m,1) = corr(Y1(~isnan(Y1) & ~isnan(X)),b1(1) + b1(2)*X(~isnan(Y1) & ~isnan(X)))^2;
+    MonthlyPrecipitationRegressions.intercept2(m,1) = b2(1);
+    MonthlyPrecipitationRegressions.slope2(m,1) = b2(2);
+    MonthlyPrecipitationRegressions.rsquared2(m,1) = corr(Y2(~isnan(Y2) & ~isnan(X)),b2(1) + b2(2)*X(~isnan(Y2) & ~isnan(X)))^2;
     
     %%plot the regression
     subplot(3,4,m)
-    scatter(tbl1.Var1,tbl1.Var2, 'r+'); hold on
-    scatter(tbl2.Var1, tbl2.Var2, 'b+'); hold on
+    scatter(X,Y1, 'r+'); hold on
+    scatter(X,Y2, 'b+'); hold on
     title(m)
     
     %%fill gaps
     index1 = find(monthofyear==m & isnan(filledP));
-    filledP(index1) = AllWx.P_secondary1(index1).*slp1(m) + int1(m);
+    filledP(index1) = b1(1) + AllWx.P_secondary1(index1).*b1(2);
     index2 = find(monthofyear==m & isnan(filledP));
-    filledP(index2) = AllWx.P_secondary2(index2).*slp2(m) + int2(m);
+    filledP(index2) = b2(1) + AllWx.P_secondary2(index2).*b2(2);
 end
 title(['Monthly precipitation regressions ',glacier, 'Glacier'])
 Pnancount(2) = sum(isnan(filledP));
-MonthlyPrecipitationRegressions = table(mth,slp1,int1,rsq1,slp2,int2,rsq2,{'month','slope1','intercept1','rsquared1','slope2','intercept2','rsquared2'});
 writetable(MonthlyPrecipitationRegressions,outputPrecipitationRegressions)
 
 %%Fill the remaining NaNs with the average daily temperature
