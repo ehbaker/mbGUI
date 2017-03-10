@@ -4,12 +4,15 @@ function [ready]=fillWxData(glacier)
 % the city data and the glacier data.
 %
 dbstop if error
+warning off MATLAB:table:RowsAddedExistingVars
+warning off stats:statrobustfit:IterationLimit
 
 formatSecondaryWxData(glacier); %correct/reformat data from cities
 PrimaryWx=readtable(['data/',glacier,'/Input/Input_',glacier,'_Daily_Weather.csv']); %Weather from the nearest Wx station
 SecondaryWxNames=importdata(['data/',glacier,'/Input/Input_',glacier,'_SecondaryWxData.csv']);  %file with names of secondary Wx stations
 SecondaryWx1=readtable(cell2mat(['data/',glacier,'/Input/SecondaryWxData/Output_',SecondaryWxNames(1),'data.csv'])); %
 SecondaryWx2=readtable(cell2mat(['data/',glacier,'/Input/SecondaryWxData/Output_',SecondaryWxNames(2),'data.csv'])); %
+MissingPrecipitation=readtable(['data/',glacier,'/Input/Input_',glacier,'_Missing_Precipitation.csv']); % Manual Precip totals from data logger failure dates
 outputTemperatureRegressions=['data/',glacier,'/Output/Output_',glacier,'TemperatureRegressions.csv']; % New regressions stored here
 outputPrecipitationRegressions=['data/',glacier,'/Output/Output_',glacier,'PrecipitationRegressions.csv']; 
 outputWx=['data/',glacier,'/Output/Output_',glacier,'filledWx.csv']; % Filled Wx stored here
@@ -27,32 +30,32 @@ filledT = interp1gap(AllWx.T_primary,3)';% linear interpolation of temperature t
 Tnancount(2) = sum(isnan(filledT));
 
 %%Calculate monthly regressions and fill
+MonthlyTemperatureRegressions = table;
 figure (); hold on 
 title(['Monthly temperature regressions ',glacier, 'Glacier'])
 monthofyear = month(AllWx.date,'monthofyear');
-MonthlyTemperatureRegressions = table;
 for m = 1:12;
     %%iteratively reweighted least squares regression
     index = find(monthofyear==m);
-    X = AllWx.T_primary(index);
-    Y1 = AllWx.T_secondary1(index);
-    Y2 = AllWx.T_secondary2(index);
-    [b1 stats1] = robustfit(X,Y1);
-    [b2 stats2] = robustfit(X,Y2);
+    X1 = AllWx.T_secondary1(index);
+    X2 = AllWx.T_secondary2(index);
+    Y = AllWx.T_primary(index);
+    b1 = robustfit(X1,Y);
+    b2 = robustfit(X1,Y);
     
     %%store the coefficients in a table
     MonthlyTemperatureRegressions.month(m,1) = m;
     MonthlyTemperatureRegressions.intercept1(m,1) = b1(1);
     MonthlyTemperatureRegressions.slope1(m,1) = b1(2);
-    MonthlyTemperatureRegressions.rsquared1(m,1) = corr(Y1(~isnan(Y1) & ~isnan(X)),b1(1) + b1(2)*X(~isnan(Y1) & ~isnan(X)))^2;
+    MonthlyTemperatureRegressions.rsquared1(m,1) = corr(Y(~isnan(Y) & ~isnan(X1)),b1(1) + b1(2)*X1(~isnan(Y) & ~isnan(X1)))^2;
     MonthlyTemperatureRegressions.intercept2(m,1) = b2(1);
     MonthlyTemperatureRegressions.slope2(m,1) = b2(2);
-    MonthlyTemperatureRegressions.rsquared2(m,1) = corr(Y2(~isnan(Y2) & ~isnan(X)),b2(1) + b2(2)*X(~isnan(Y2) & ~isnan(X)))^2;
+    MonthlyTemperatureRegressions.rsquared2(m,1) = corr(Y(~isnan(Y) & ~isnan(X2)),b2(1) + b2(2)*X2(~isnan(Y) & ~isnan(X2)))^2;
     
     %%plot the regression
     subplot(3,4,m)
-    scatter(X,Y1, 'r+'); hold on
-    scatter(X,Y2, 'b+'); hold on
+    scatter(X1,Y, 'r+'); hold on
+    scatter(X2,Y, 'b+'); hold on
     title(m)
     
     %%fill gaps
@@ -66,10 +69,10 @@ writetable(MonthlyTemperatureRegressions,outputTemperatureRegressions)
 
 %%Fill the remaining NaNs with the average daily temperature
 dayofyear = day(AllWx.date,'dayofyear');
+meanDailyT = nan(366);
 for d = 1:366;
     meanDailyT(d) = nanmean(AllWx.T_primary(dayofyear==d));
-    index3 = find(dayofyear==d & isnan(filledT));
-    filledT(index3) = meanDailyT(d);
+    filledT(dayofyear==d & isnan(filledT)) = meanDailyT(d);
 end
 Tnancount(4) = sum(isnan(filledT));
  
@@ -78,50 +81,60 @@ filledP = AllWx.P_primary;
 Pnancount(1) = sum(isnan(filledP));
 
 %%Calculate monthly precipitation regressions and fill
-figure (); hold on 
 MonthlyPrecipitationRegressions = table;
+figure (); hold on 
+title(['Monthly precipitation regressions ',glacier, 'Glacier'])
 for m = 1:12;
     %%iteratively reweighted least squares regression
     index = find(monthofyear==m);
-    X = AllWx.P_primary(index);
-    Y1 = AllWx.P_secondary1(index);
-    Y2 = AllWx.P_secondary2(index);
-    [b1 stats1] = robustfit(X,Y1);
-    [b2 stats2] = robustfit(X,Y2);
+    X1 = AllWx.P_secondary1(index);
+    X2 = AllWx.P_secondary2(index);
+    Y = AllWx.P_primary(index);
+    b1 = robustfit(X1,Y,'ols','off'); %removes the intercept term so that 0 precip secondary = 0 precip primary
+    b2 = robustfit(X2,Y,'ols','off');
     
    %%store the coefficients in a table
     MonthlyPrecipitationRegressions.month(m,1) = m;
-    MonthlyPrecipitationRegressions.intercept1(m,1) = b1(1);
-    MonthlyPrecipitationRegressions.slope1(m,1) = b1(2);
-    MonthlyPrecipitationRegressions.rsquared1(m,1) = corr(Y1(~isnan(Y1) & ~isnan(X)),b1(1) + b1(2)*X(~isnan(Y1) & ~isnan(X)))^2;
-    MonthlyPrecipitationRegressions.intercept2(m,1) = b2(1);
-    MonthlyPrecipitationRegressions.slope2(m,1) = b2(2);
-    MonthlyPrecipitationRegressions.rsquared2(m,1) = corr(Y2(~isnan(Y2) & ~isnan(X)),b2(1) + b2(2)*X(~isnan(Y2) & ~isnan(X)))^2;
+    MonthlyPrecipitationRegressions.slope1(m,1) = b1;
+    MonthlyPrecipitationRegressions.rsquared1(m,1) = corr(Y(~isnan(Y) & ~isnan(X1)),b1*X1(~isnan(Y) & ~isnan(X1)))^2;
+    MonthlyPrecipitationRegressions.slope2(m,1) = b2;
+    MonthlyPrecipitationRegressions.rsquared2(m,1) = corr(Y(~isnan(Y) & ~isnan(X2)),b2*X2(~isnan(Y) & ~isnan(X2)))^2;
     
     %%plot the regression
     subplot(3,4,m)
-    scatter(X,Y1, 'r+'); hold on
-    scatter(X,Y2, 'b+'); hold on
+    scatter(X1,Y, 'r+'); hold on
+    scatter(X2,Y, 'b+'); hold on
     title(m)
     
     %%fill gaps
     index1 = find(monthofyear==m & isnan(filledP));
-    filledP(index1) = b1(1) + AllWx.P_secondary1(index1).*b1(2);
+    filledP(index1) = AllWx.P_secondary1(index1).*b1;
     index2 = find(monthofyear==m & isnan(filledP));
-    filledP(index2) = b2(1) + AllWx.P_secondary2(index2).*b2(2);
+    filledP(index2) = AllWx.P_secondary2(index2).*b2;
 end
-title(['Monthly precipitation regressions ',glacier, 'Glacier'])
+
 Pnancount(2) = sum(isnan(filledP));
 writetable(MonthlyPrecipitationRegressions,outputPrecipitationRegressions)
 
-%%Fill the remaining NaNs with the average daily temperature
+%%Fill the remaining NaNs with the average daily precip
 dayofyear = day(AllWx.date,'dayofyear');
+meanDailyP = nan(366);
 for d = 1:366;
     meanDailyP(d) = nanmean(AllWx.P_primary(dayofyear==d));
-    index3 = find(dayofyear==d & isnan(filledP));
-    filledP(index3) = meanDailyP(d);
+    filledP(dayofyear==d & isnan(filledP)) = meanDailyP(d);
 end
 Pnancount(3) = sum(isnan(filledP));
+
+%use available data to correct some of the missing values
+MissingPrecipitation.start_date = datetime(MissingPrecipitation.start_date);
+MissingPrecipitation.end_date = datetime(MissingPrecipitation.end_date);
+for n = 1:height(MissingPrecipitation) 
+    start = find(AllWx.date==MissingPrecipitation.start_date(n));
+    finish = find(AllWx.date==MissingPrecipitation.end_date(n));
+    estP = sum(filledP(start:finish));
+    adj = estP/MissingPrecipitation.P(n);
+    filledP(start:finish) = filledP(start:finish).*adj;
+end
 
 filledWx = table;
 filledWx.date = AllWx.date;
