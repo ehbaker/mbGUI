@@ -276,8 +276,17 @@ switch get(handles.UPDATE_POPUP,'Value')
         end
         cd(mydir)
         guidata(hObject, handles);
-    case 2 %invert for snow,ice meltrates and precip/catch ratios
-        [ready,usebeta]= invParams(glacier);
+    case 2 %calculate precip/catch ratios
+        [ready,usebeta]= calcStakeCatch(glacier);
+        if ready==length(usebeta)
+            set(handles.UPDATE_BUTTON,'string','Can now calculate melt coefficients');
+        else            
+            set(handles.UPDATE_BUTTON,'string','Uh oh. Try that again');
+        end
+        cd(mydir)
+        guidata(hObject, handles);
+    case 3 %calculate melt coefficients
+        [ready,usebeta]= calculateMeltCoefs(glacier);
         if ready==length(usebeta)
             set(handles.UPDATE_BUTTON,'string','Can now fit balance gradients');
         else            
@@ -285,7 +294,7 @@ switch get(handles.UPDATE_POPUP,'Value')
         end
         cd(mydir)
         guidata(hObject, handles);
-    case 3 %fit balance gradient to fix missing measurements, or really late/early measurements
+    case 4 %fit balance gradient to fix missing measurements, or really late/early measurements
         use=NaN*ones(12,1); %initialize
     use(1)=get(handles.SITE1,'Value');
     use(2)=get(handles.SITE2,'Value');
