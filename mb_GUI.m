@@ -1,7 +1,6 @@
 function varargout = mb_GUI(varargin)
 dbstop if error
  
-
 addpath functions/
 % MB_GUI M-file for mb_GUI.fig
 %      MB_GUI, by itself, creates a new MB_GUI or raises the existing
@@ -48,7 +47,6 @@ end
 % End initialization code - DO NOT EDIT
 % 
 
-
 %%%%%%%%%%% Setup of GUI for User  %%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -61,7 +59,6 @@ mydir = pwd; % get working directory
 handles.params.mydir = mydir;
 % Choose default command line output for setup_inputs
 handles.output = hObject;
-
 
 
 %%%%%% setup site map %%%%%%%
