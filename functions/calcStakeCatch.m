@@ -38,7 +38,7 @@ for n = 1:length(stakes)
     end
     tempCatch = SnowMeasured'./SnowEstimated';
     medCatch = nanmedian(tempCatch);
-    tempCatch(isnan(tempCatch) | ~isfinite(tempCatch)) = medCatch; 
+    tempCatch(~isfinite(tempCatch)) = medCatch; 
     mb_params.Catch(strcmp(mb_data.site_name,stakes(n)),1) = tempCatch;
     
     clear tempCatch medCatch SnowMeasured SnowEstimated 
@@ -50,26 +50,37 @@ bw = mb_data.winter - mb_data.winter_ablation;
 bs = mb_data.net - (mb_data.summer_accumulation + bw);
 
 Z_offset = mb_data.z - wx_meta.Elevation;
-T_offset = Z_offset*lapse/1000;
-r = 1.00;
+T_offset = Z_offset*(lapse/1000);
+r = 1.50;
+
+
 
 for n = 1:height(mb_data) %   NEED to add summer accumulation
     start = find(wx_data.date==mb_data.date_1(n));
     finish = find(wx_data.date==mb_data.date_2(n));
-    PDD_t = sum(wx_data.T(start:finish) + T_offset(n));
-    if -bs(n)<=bw(n)
+    summer_T = wx_data.T(start:finish) + T_offset(n);
+    summer_P = wx_data.P(start:finish) * mb_params.Catch(n) / 1000;
+    PDD_t(n) = sum(summer_T(summer_T>=0));
+    summer_snow(n) = sum(summer_P(summer_T<=2));
+    snow(n) = bw(n) + summer_snow(n);
+    melt(n) = bs(n) - summer_snow(n);
+    if -melt(n)<=snow
         ki(n) = NaN;
-        ks(n) = bs(n)/PDD_t;
+        ks(n) = melt(n)/PDD_t(n);
     else
-        ki(n) = (bs(n)*r + bs(n) + bw(n))/PDD_t;
+        ki(n) = (snow(n) + melt(n) - snow(n)*r)/PDD_t(n);
         ks(n) = ki(n)/r;
     end
+    
+    
 end
+figure(); hold on
+scatter(PDD_t, melt)
+fit = fitlm(PDD_t,melt)
 
 mb_params.k_s = ks';
 mb_params.k_i = ki';
-
-figure(); hold on
+ figure(); hold on
 for n = 1:length(stakes)
     scatter(mb_params.bal_year(strcmp(mb_params.site_name,stakes(n))),mb_params.k_i(strcmp(mb_params.site_name,stakes(n))),'o');
     scatter(mb_params.bal_year(strcmp(mb_params.site_name,stakes(n))),mb_params.k_s(strcmp(mb_params.site_name,stakes(n))),'+');
@@ -78,9 +89,13 @@ for n = 1:length(stakes)
     medks(n) = nanmedian(mb_params.k_s(strcmp(mb_params.site_name,stakes(n))));
     stdki(n) = nanstd(mb_params.k_i(strcmp(mb_params.site_name,stakes(n))));
     stdks(n) = nanstd(mb_params.k_s(strcmp(mb_params.site_name,stakes(n))));
-    
+    mb_params.k_i(strcmp(mb_params.site_name,stakes(n)) & ~isfinite(mb_params.k_i)) = medki(n);
+    mb_params.k_s(strcmp(mb_params.site_name,stakes(n)) & ~isfinite(mb_params.k_s)) = medks(n);
     
 end    
+
+ki_metric = nanmean(stdki);
+ks_metric = nanmean(stdks);
 
 if sum(isnan(StakeCatch))==0
     ready = 1;
