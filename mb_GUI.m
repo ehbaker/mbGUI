@@ -265,7 +265,7 @@ addpath functions
 %
 switch get(handles.UPDATE_POPUP,'Value') 
     case 1 %correct temp and precip data
-        ready=fillWxData(glacier);
+        [ready] = fillWxData(glacier);
         if ready==1
             set(handles.UPDATE_BUTTON,'string','Can now invert for params');
         else
@@ -273,52 +273,24 @@ switch get(handles.UPDATE_POPUP,'Value')
         end
         cd(mydir)
         guidata(hObject, handles);
-    case 2 %calculate precip/catch ratios
-        [ready,usebeta]= calcStakeCatch(glacier);
-        if ready==length(usebeta)
-            set(handles.UPDATE_BUTTON,'string','Can now calculate melt coefficients');
-        else            
-            set(handles.UPDATE_BUTTON,'string','Uh oh. Try that again');
-        end
-        cd(mydir)
-        guidata(hObject, handles);
-    case 3 %calculate melt coefficients
-        [ready,usebeta]= calculateMeltCoefs(glacier);
-        if ready==length(usebeta)
-            set(handles.UPDATE_BUTTON,'string','Can now fit balance gradients');
-        else            
-            set(handles.UPDATE_BUTTON,'string','Not converged, rerun');
-        end
-        cd(mydir)
-        guidata(hObject, handles);
-    case 4 %fit balance gradient to fix missing measurements, or really late/early measurements
-        use=NaN*ones(12,1); %initialize
-    use(1)=get(handles.SITE1,'Value');
-    use(2)=get(handles.SITE2,'Value');
-    use(3)=get(handles.SITE3,'Value');
-    use(4)=get(handles.SITE4,'Value');
-    use(5)=get(handles.SITE5,'Value');
-    use(6)=get(handles.SITE6,'Value');
-    use(7)=get(handles.SITE7,'Value');
-    use(8)=get(handles.SITE8,'Value');
-    use(9)=get(handles.SITE9,'Value');
-    use(10)=get(handles.SITE10,'Value');
-    use(11)=get(handles.SITE11,'Value');
-    use(12)=get(handles.SITE12,'Value');
-    if get(handles.ALLSITES,'Value')==1
-        use(1:end,1)==1;
-    end
-    
-    [mysit,balance_sites,extra_sites,ready] =use_sites(glacier,use);
-        ready=fitBalGrad(glacier,balance_sites,grad);
-        
+    case 2 %calculate precip/catch ratios and melt coefficients
+        [ready] = calcStakeCatch(glacier);
         if ready==1
-            set(handles.UPDATE_BUTTON,'string','Ready to GO!');
-        else %should never get here
-            set(handles.UPDATE_BUTTON,'string','Oops! try again...');
+            set(handles.UPDATE_BUTTON,'string','Can now estimate missing obs.');
+        else            
+            set(handles.UPDATE_BUTTON,'string','Uh oh. Your data is f!*$@%');
         end
         cd(mydir)
-        guidata(hObject, handles);     
+        guidata(hObject, handles);
+    case 3 %estimate missing observations
+        [ready] = estMissingObs(glacier);
+        if ready==1
+            set(handles.UPDATE_BUTTON,'string','Good to go!');
+        else            
+            set(handles.UPDATE_BUTTON,'string','Aw s*!#. Something did not work right');
+        end
+        cd(mydir)
+        guidata(hObject, handles);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
