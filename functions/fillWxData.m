@@ -7,15 +7,19 @@ dbstop if error
 warning off MATLAB:table:RowsAddedExistingVars
 warning off stats:statrobustfit:IterationLimit
 
+
+%ins
 formatSecondaryWxData(glacier); %correct/reformat data from cities
 PrimaryWx=readtable(['data/',glacier,'/Input/Input_',glacier,'_Daily_Weather.csv']); %Weather from the nearest Wx station
 SecondaryWxNames=importdata(['data/',glacier,'/Input/Input_',glacier,'_SecondaryWxData.csv']);  %file with names of secondary Wx stations
 SecondaryWx1=readtable(cell2mat(['data/',glacier,'/Input/SecondaryWxData/Output_',SecondaryWxNames(1),'data.csv'])); %
 SecondaryWx2=readtable(cell2mat(['data/',glacier,'/Input/SecondaryWxData/Output_',SecondaryWxNames(2),'data.csv'])); %
 MissingPrecipitation=readtable(['data/',glacier,'/Input/Input_',glacier,'_Missing_Precipitation.csv']); % Manual Precip totals from data logger failure dates
-outputTemperatureRegressions=['data/',glacier,'/Output/Output_',glacier,'TemperatureRegressions.csv']; % New regressions stored here
-outputPrecipitationRegressions=['data/',glacier,'/Output/Output_',glacier,'PrecipitationRegressions.csv']; 
-outputWx=['data/',glacier,'/Output/Output_',glacier,'filledWx.csv']; % Filled Wx stored here
+
+%outs
+outputTemperatureRegressions=['data/',glacier,'/Intermediate/',glacier,'TemperatureRegressions.csv']; % New regressions stored here
+outputPrecipitationRegressions=['data/',glacier,'/Intermediate/',glacier,'PrecipitationRegressions.csv']; 
+OutputWx=['data/',glacier,'/Intermediate/',glacier,'FilledWx.csv']; % Filled Wx stored here
  
 PrimaryWx.date = datetime(PrimaryWx.date);
 SecondaryWx1.date = datetime(SecondaryWx1.date);
@@ -154,11 +158,11 @@ for n = 1:height(MissingPrecipitation)
     filledP(start:finish) = filledP(start:finish).*adj;
 end
 
-filledWx = table;
-filledWx.date = AllWx.date;
-filledWx.T = filledT;
-filledWx.P = filledP;
-writetable(filledWx,outputWx)
+FilledWx = table;
+FilledWx.date = AllWx.date;
+FilledWx.T = filledT;
+FilledWx.P = filledP;
+writetable(FilledWx,OutputWx)
 
 if Tnancount(4)==0 && Pnancount(3)==0
 ready=1;
